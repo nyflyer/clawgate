@@ -86,3 +86,8 @@ typings/
 
 # DynamoDB Local files
 .dynamodb/
+
+# Claude, OpenAI, and Gemini files
+.claude/
+.opencode/
+.gemini/
