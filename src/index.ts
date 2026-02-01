@@ -83,14 +83,18 @@ app.post('/v1/exec', async (c) => {
   }
 
   // Parse request
-  let body: { command: string; args?: string[] }
+  let body: unknown
   try {
     body = await c.req.json()
   } catch {
     return c.json({ ok: false, error: { code: 'INVALID_REQUEST', message: 'Invalid JSON body' } }, 400)
   }
 
-  const { command, args = [] } = body
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return c.json({ ok: false, error: { code: 'INVALID_REQUEST', message: 'Invalid request body' } }, 400)
+  }
+
+  const { command, args = [] } = body as { command?: unknown; args?: unknown }
 
   if (!command || typeof command !== 'string') {
     return c.json({ ok: false, error: { code: 'INVALID_REQUEST', message: 'Missing command' } }, 400)

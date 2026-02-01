@@ -15,11 +15,20 @@ if [ -z "$CONTAINER" ]; then
   exit 1
 fi
 
-# Verify container exists and is running
+# Verify container exists
 if ! docker inspect "$CONTAINER" >/dev/null 2>&1; then
-  echo "ERROR: Container '$CONTAINER' does not exist or is not running" >&2
+  echo "ERROR: Container '$CONTAINER' does not exist" >&2
   echo ""
   echo "Available containers:"
+  docker ps --format '  {{.Names}}'
+  exit 1
+fi
+
+# Verify container is running
+if [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER")" != "true" ]; then
+  echo "ERROR: Container '$CONTAINER' is not running" >&2
+  echo ""
+  echo "Running containers:"
   docker ps --format '  {{.Names}}'
   exit 1
 fi
