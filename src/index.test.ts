@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
 
-// Test the server
+const JSON_HEADERS = { 'Content-Type': 'application/json' }
+
 describe('Clawgate MVP', () => {
   let server: { stop: () => void; port: number }
   let baseUrl: string
@@ -35,11 +36,8 @@ describe('Clawgate MVP', () => {
   test('POST /v1/exec with allowed command succeeds', async () => {
     const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        command: 'echo',
-        args: ['hello', 'world'],
-      }),
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ command: 'echo', args: ['hello', 'world'] }),
     })
     const data = await res.json()
 
@@ -52,11 +50,8 @@ describe('Clawgate MVP', () => {
   test('POST /v1/exec with disallowed command fails', async () => {
     const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        command: 'rm',
-        args: ['-rf', '/'],
-      }),
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ command: 'rm', args: ['-rf', '/'] }),
     })
     const data = await res.json()
 
@@ -68,11 +63,8 @@ describe('Clawgate MVP', () => {
   test('POST /v1/exec injects credentials to subprocess', async () => {
     const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        command: 'printenv',
-        args: ['TEST_VAR'],
-      }),
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ command: 'printenv', args: ['TEST_VAR'] }),
     })
     const data = await res.json()
 
@@ -84,7 +76,7 @@ describe('Clawgate MVP', () => {
   test('POST /v1/exec with invalid JSON fails', async () => {
     const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
       body: 'not json',
     })
     const data = await res.json()
@@ -97,7 +89,7 @@ describe('Clawgate MVP', () => {
   test('POST /v1/exec with missing command fails', async () => {
     const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
       body: JSON.stringify({ args: ['test'] }),
     })
     const data = await res.json()

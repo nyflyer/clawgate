@@ -67,8 +67,7 @@ app.post('/v1/exec', async (c) => {
   }
 
   // Check allowlist (exact match only - no prefix matching to prevent bypass)
-  const isAllowed = ALLOWLIST.includes(command)
-  if (!isAllowed) {
+  if (!ALLOWLIST.includes(command)) {
     console.log(`[DENIED] Command not in allowlist: ${command}`)
     return c.json({ ok: false, error: { code: 'OPERATION_DENIED', message: `Command '${command}' not allowed` } }, 403)
   }
@@ -101,34 +100,33 @@ app.post('/v1/exec', async (c) => {
     })
 
     // Wait for completion with timeout
-    const timeout = 30000 // 30 seconds
-    let timeoutId: ReturnType<typeof setTimeout> | undefined
+    const TIMEOUT_MS = 30000
+    let timeoutId: Timer | undefined
+
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
         proc.kill('SIGKILL')
         reject(new Error('Command timed out'))
-      }, timeout)
+      }, TIMEOUT_MS)
     })
 
-    try {
-      const exitCode = await Promise.race([proc.exited, timeoutPromise])
-
-      const stdout = await new Response(proc.stdout).text()
-      const stderr = await new Response(proc.stderr).text()
-
-      console.log(`[DONE] exit=${exitCode} stdout=${stdout.length}b stderr=${stderr.length}b`)
-
-      return c.json({
-        ok: true,
-        data: {
-          stdout,
-          stderr,
-          exitCode,
-        },
-      })
-    } finally {
+    const exitCode = await Promise.race([proc.exited, timeoutPromise]).finally(() => {
       if (timeoutId) clearTimeout(timeoutId)
-    }
+    })
+
+    const stdout = await new Response(proc.stdout).text()
+    const stderr = await new Response(proc.stderr).text()
+
+    console.log(`[DONE] exit=${exitCode} stdout=${stdout.length}b stderr=${stderr.length}b`)
+
+    return c.json({
+      ok: true,
+      data: {
+        stdout,
+        stderr,
+        exitCode,
+      },
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Command execution failed'
     console.error(`[ERROR] ${message}`)
