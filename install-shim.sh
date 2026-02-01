@@ -15,6 +15,21 @@ if [ -z "$CONTAINER" ]; then
   exit 1
 fi
 
+# Verify container exists and is running
+if ! docker inspect "$CONTAINER" >/dev/null 2>&1; then
+  echo "ERROR: Container '$CONTAINER' does not exist or is not running" >&2
+  echo ""
+  echo "Available containers:"
+  docker ps --format '  {{.Names}}'
+  exit 1
+fi
+
+# Verify shim exists
+if [ ! -f "$SHIM_DIR/gog" ]; then
+  echo "ERROR: Shim file not found at $SHIM_DIR/gog" >&2
+  exit 1
+fi
+
 echo "Installing gog shim in container: $CONTAINER"
 
 # Copy shim to container

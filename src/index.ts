@@ -27,9 +27,44 @@ try {
   process.exit(1)
 }
 
-// Allowlist of commands (MVP: simple prefix matching)
+// Validate credential values
+for (const [key, value] of Object.entries(CREDENTIALS)) {
+  if (typeof value !== 'string') {
+    console.error(`ERROR: Credential '${key}' must be a string`)
+    process.exit(1)
+  }
+  if (/[\x00\r\n]/.test(value)) {
+    console.error(`ERROR: Credential '${key}' contains invalid characters`)
+    process.exit(1)
+  }
+}
+
+// Allowlist of commands (exact match only)
 // e.g., CLAWGATE_ALLOWLIST='gog,gh,curl'
 const ALLOWLIST = (process.env.CLAWGATE_ALLOWLIST || 'gog').split(',').map(s => s.trim())
+
+// Output size limit to prevent memory exhaustion
+const MAX_OUTPUT_BYTES = 10 * 1024 * 1024 // 10MB
+
+async function readLimited(stream: ReadableStream<Uint8Array>, maxBytes: number): Promise<string> {
+  const reader = stream.getReader()
+  const chunks: Uint8Array[] = []
+  let totalSize = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    totalSize += value.length
+    if (totalSize > maxBytes) {
+      reader.cancel()
+      chunks.push(value.slice(0, maxBytes - (totalSize - value.length)))
+      break
+    }
+    chunks.push(value)
+  }
+
+  return new TextDecoder().decode(Buffer.concat(chunks))
+}
 
 // Middleware
 app.use('*', logger())
@@ -114,8 +149,8 @@ app.post('/v1/exec', async (c) => {
       if (timeoutId) clearTimeout(timeoutId)
     })
 
-    const stdout = await new Response(proc.stdout).text()
-    const stderr = await new Response(proc.stderr).text()
+    const stdout = await readLimited(proc.stdout, MAX_OUTPUT_BYTES)
+    const stderr = await readLimited(proc.stderr, MAX_OUTPUT_BYTES)
 
     console.log(`[DONE] exit=${exitCode} stdout=${stdout.length}b stderr=${stderr.length}b`)
 
