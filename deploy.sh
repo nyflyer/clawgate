@@ -5,7 +5,7 @@
 set -e
 
 HOST="${1:-ocm}"
-REMOTE_DIR="/home/moses/Dev/clawgate"
+REMOTE_DIR="${CLAWGATE_REMOTE_DIR:-/opt/clawgate}"
 
 echo "Deploying to $HOST..."
 

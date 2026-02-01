@@ -75,7 +75,7 @@ app.post('/v1/exec', async (c) => {
 
   // Build command array
   const cmdArray = [command, ...args]
-  console.log(`[EXEC] ${cmdArray.join(' ')}`)
+  console.log(`[EXEC] ${command} (${args.length} args)`)
 
   // Execute with credentials injected
   try {
@@ -85,7 +85,7 @@ app.post('/v1/exec', async (c) => {
       '/home/linuxbrew/.linuxbrew/sbin',
       '/usr/local/bin',
     ]
-    const PATH = [...extraPaths, process.env.PATH].join(':')
+    const PATH = [...extraPaths, process.env.PATH].filter(Boolean).join(':')
 
     const proc = Bun.spawn(cmdArray, {
       env: {

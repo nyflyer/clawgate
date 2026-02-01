@@ -2,21 +2,21 @@ import { describe, test, expect, beforeAll, afterAll } from 'bun:test'
 
 // Test the server
 describe('Clawgate MVP', () => {
-  let server: { stop: () => void }
-  const BASE_URL = 'http://localhost:9877' // Use different port for tests
+  let server: { stop: () => void; port: number }
+  let baseUrl: string
 
   beforeAll(async () => {
     // Set test environment
-    process.env.CLAWGATE_PORT = '9877'
     process.env.CLAWGATE_CREDENTIALS = '{"TEST_VAR":"test_value"}'
-    process.env.CLAWGATE_ALLOWLIST = 'echo,cat'
+    process.env.CLAWGATE_ALLOWLIST = 'echo,cat,printenv'
 
     // Import and start server
     const mod = await import('./index.ts')
     server = Bun.serve({
-      port: 9877,
+      port: 0, // ephemeral port
       fetch: mod.default.fetch,
     })
+    baseUrl = `http://localhost:${server.port}`
   })
 
   afterAll(() => {
@@ -24,7 +24,7 @@ describe('Clawgate MVP', () => {
   })
 
   test('GET /healthz returns ok', async () => {
-    const res = await fetch(`${BASE_URL}/healthz`)
+    const res = await fetch(`${baseUrl}/healthz`)
     const data = await res.json()
 
     expect(res.status).toBe(200)
@@ -33,7 +33,7 @@ describe('Clawgate MVP', () => {
   })
 
   test('POST /v1/exec with allowed command succeeds', async () => {
-    const res = await fetch(`${BASE_URL}/v1/exec`, {
+    const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -50,7 +50,7 @@ describe('Clawgate MVP', () => {
   })
 
   test('POST /v1/exec with disallowed command fails', async () => {
-    const res = await fetch(`${BASE_URL}/v1/exec`, {
+    const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -66,24 +66,23 @@ describe('Clawgate MVP', () => {
   })
 
   test('POST /v1/exec injects credentials to subprocess', async () => {
-    const res = await fetch(`${BASE_URL}/v1/exec`, {
+    const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        command: 'echo',
-        args: ['$TEST_VAR'],
+        command: 'printenv',
+        args: ['TEST_VAR'],
       }),
     })
     const data = await res.json()
 
-    // Note: echo $TEST_VAR won't expand without shell
-    // But we can verify the command ran
     expect(res.status).toBe(200)
     expect(data.ok).toBe(true)
+    expect(data.data.stdout).toContain('test_value')
   })
 
   test('POST /v1/exec with invalid JSON fails', async () => {
-    const res = await fetch(`${BASE_URL}/v1/exec`, {
+    const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: 'not json',
@@ -96,7 +95,7 @@ describe('Clawgate MVP', () => {
   })
 
   test('POST /v1/exec with missing command fails', async () => {
-    const res = await fetch(`${BASE_URL}/v1/exec`, {
+    const res = await fetch(`${baseUrl}/v1/exec`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ args: ['test'] }),

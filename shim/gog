@@ -21,7 +21,7 @@ else
     else
       args_json="$args_json,"
     fi
-    escaped_arg=$(printf '%s' "$arg" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\t/\\t/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+    escaped_arg=$(printf '%s' "$arg" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\t/\\t/g' | sed ':a;N;$!ba;s/\n/\\n/g' | tr '\r' ' ')
     args_json="$args_json\"$escaped_arg\""
   done
   args_json="$args_json]"
@@ -63,13 +63,13 @@ if command -v jq >/dev/null 2>&1; then
     exit 1
   fi
 else
-  # Fallback: grep-based parsing (less reliable)
+  # Fallback: warn that jq is needed
   if echo "$response" | grep -q '"ok":true'; then
-    # Just dump the response for now
+    echo "Warning: jq not installed - raw response follows:" >&2
     echo "$response"
     exit 0
   else
-    echo "clawgate error: request failed" >&2
+    echo "clawgate error: request failed (install jq for better output)" >&2
     echo "$response" >&2
     exit 1
   fi
