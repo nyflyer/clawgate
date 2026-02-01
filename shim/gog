@@ -21,7 +21,7 @@ else
     else
       args_json="$args_json,"
     fi
-    escaped_arg=$(printf '%s' "$arg" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\t/\\t/g')
+    escaped_arg=$(printf '%s' "$arg" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\t/\\t/g' | sed ':a;N;$!ba;s/\n/\\n/g')
     args_json="$args_json\"$escaped_arg\""
   done
   args_json="$args_json]"

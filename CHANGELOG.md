@@ -35,5 +35,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Subprocess environment sanitized (CLAWGATE_* vars stripped)
 - 30-second command timeout with SIGKILL enforcement
 
-[Unreleased]: https://github.com/user/clawgate/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/user/clawgate/releases/tag/v0.1.0
+[Unreleased]: https://github.com/nyflyer/clawgate/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/nyflyer/clawgate/releases/tag/v0.1.0

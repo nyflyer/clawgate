@@ -18,9 +18,14 @@ const AUTH_TOKEN = process.env.CLAWGATE_AUTH_TOKEN || '' // Optional for MVP
 
 // Credentials to inject (JSON object of env vars)
 // e.g., CLAWGATE_CREDENTIALS='{"GOG_KEYRING_PASSWORD":"secret"}'
-const CREDENTIALS: Record<string, string> = JSON.parse(
-  process.env.CLAWGATE_CREDENTIALS || '{}'
-)
+let CREDENTIALS: Record<string, string> = {}
+try {
+  CREDENTIALS = JSON.parse(process.env.CLAWGATE_CREDENTIALS || '{}')
+} catch (err) {
+  console.error('ERROR: Invalid JSON in CLAWGATE_CREDENTIALS environment variable')
+  console.error('Expected format: \'{"KEY":"value","KEY2":"value2"}\'')
+  process.exit(1)
+}
 
 // Allowlist of commands (MVP: simple prefix matching)
 // e.g., CLAWGATE_ALLOWLIST='gog,gh,curl'
@@ -56,8 +61,13 @@ app.post('/v1/exec', async (c) => {
     return c.json({ ok: false, error: { code: 'INVALID_REQUEST', message: 'Missing command' } }, 400)
   }
 
-  // Check allowlist (MVP: just check if command starts with allowed prefix)
-  const isAllowed = ALLOWLIST.some(prefix => command === prefix || command.startsWith(`${prefix} `))
+  // Validate args is an array of strings
+  if (!Array.isArray(args) || !args.every(a => typeof a === 'string')) {
+    return c.json({ ok: false, error: { code: 'INVALID_REQUEST', message: 'args must be array of strings' } }, 400)
+  }
+
+  // Check allowlist (exact match only - no prefix matching to prevent bypass)
+  const isAllowed = ALLOWLIST.includes(command)
   if (!isAllowed) {
     console.log(`[DENIED] Command not in allowlist: ${command}`)
     return c.json({ ok: false, error: { code: 'OPERATION_DENIED', message: `Command '${command}' not allowed` } }, 403)
@@ -79,12 +89,12 @@ app.post('/v1/exec', async (c) => {
 
     const proc = Bun.spawn(cmdArray, {
       env: {
-        ...process.env,
+        // Minimal environment - don't leak host env vars
         PATH,
+        HOME: process.env.HOME,
+        USER: process.env.USER,
+        TERM: process.env.TERM || 'xterm-256color',
         ...CREDENTIALS,
-        // Don't leak our own config to subprocesses
-        CLAWGATE_CREDENTIALS: undefined,
-        CLAWGATE_AUTH_TOKEN: undefined,
       },
       stdout: 'pipe',
       stderr: 'pipe',
@@ -92,28 +102,33 @@ app.post('/v1/exec', async (c) => {
 
     // Wait for completion with timeout
     const timeout = 30000 // 30 seconds
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         proc.kill('SIGKILL')
         reject(new Error('Command timed out'))
       }, timeout)
     })
 
-    const exitCode = await Promise.race([proc.exited, timeoutPromise])
+    try {
+      const exitCode = await Promise.race([proc.exited, timeoutPromise])
 
-    const stdout = await new Response(proc.stdout).text()
-    const stderr = await new Response(proc.stderr).text()
+      const stdout = await new Response(proc.stdout).text()
+      const stderr = await new Response(proc.stderr).text()
 
-    console.log(`[DONE] exit=${exitCode} stdout=${stdout.length}b stderr=${stderr.length}b`)
+      console.log(`[DONE] exit=${exitCode} stdout=${stdout.length}b stderr=${stderr.length}b`)
 
-    return c.json({
-      ok: true,
-      data: {
-        stdout,
-        stderr,
-        exitCode,
-      },
-    })
+      return c.json({
+        ok: true,
+        data: {
+          stdout,
+          stderr,
+          exitCode,
+        },
+      })
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId)
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Command execution failed'
     console.error(`[ERROR] ${message}`)
