@@ -92,3 +92,6 @@ typings/
 .opencode/
 .gemini/
 .planning/
+
+# Internal reference docs (may contain examples with real data)
+clawgate-spec.md

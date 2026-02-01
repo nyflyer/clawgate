@@ -1,0 +1,34 @@
+{
+  "name": "clawgate",
+  "version": "0.1.0",
+  "description": "Credential proxy for AI agent sandboxes",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "clawgate": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.0"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "keywords": [
+    "ai",
+    "agent",
+    "sandbox",
+    "credentials",
+    "proxy",
+    "security"
+  ]
+}

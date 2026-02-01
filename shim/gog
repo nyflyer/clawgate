@@ -1,0 +1,76 @@
+#!/bin/sh
+# Clawgate shim for gog
+# Forwards commands to Clawgate proxy
+#
+# Install in sandbox: copy to /usr/local/bin/gog
+# Requires: CLAWGATE_URL environment variable
+# Optional: CLAWGATE_SESSION_TOKEN for auth
+
+CLAWGATE_URL="${CLAWGATE_URL:-http://host.docker.internal:9876}"
+
+# Build JSON args array using jq if available, otherwise simple escape
+if command -v jq >/dev/null 2>&1; then
+  args_json=$(printf '%s\n' "$@" | jq -R . | jq -s .)
+else
+  # Fallback: simple JSON array construction
+  args_json="["
+  first=true
+  for arg in "$@"; do
+    if [ "$first" = true ]; then
+      first=false
+    else
+      args_json="$args_json,"
+    fi
+    escaped_arg=$(printf '%s' "$arg" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/\t/\\t/g')
+    args_json="$args_json\"$escaped_arg\""
+  done
+  args_json="$args_json]"
+fi
+
+# Build request body
+body="{\"command\":\"gog\",\"args\":$args_json}"
+
+# Make request to Clawgate
+if [ -n "$CLAWGATE_SESSION_TOKEN" ]; then
+  response=$(curl -s -X POST \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $CLAWGATE_SESSION_TOKEN" \
+    -d "$body" \
+    "$CLAWGATE_URL/v1/exec")
+else
+  response=$(curl -s -X POST \
+    -H "Content-Type: application/json" \
+    -d "$body" \
+    "$CLAWGATE_URL/v1/exec")
+fi
+
+# Parse response with jq if available
+if command -v jq >/dev/null 2>&1; then
+  ok=$(echo "$response" | jq -r '.ok')
+
+  if [ "$ok" = "true" ]; then
+    stdout=$(echo "$response" | jq -r '.data.stdout // empty')
+    stderr=$(echo "$response" | jq -r '.data.stderr // empty')
+    exit_code=$(echo "$response" | jq -r '.data.exitCode // 0')
+
+    [ -n "$stdout" ] && printf '%s' "$stdout"
+    [ -n "$stderr" ] && printf '%s' "$stderr" >&2
+
+    exit "$exit_code"
+  else
+    error_msg=$(echo "$response" | jq -r '.error.message // "unknown error"')
+    echo "clawgate error: $error_msg" >&2
+    exit 1
+  fi
+else
+  # Fallback: grep-based parsing (less reliable)
+  if echo "$response" | grep -q '"ok":true'; then
+    # Just dump the response for now
+    echo "$response"
+    exit 0
+  else
+    echo "clawgate error: request failed" >&2
+    echo "$response" >&2
+    exit 1
+  fi
+fi
