@@ -10,7 +10,9 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:shim": "./shim/gog.test.sh",
+    "test:all": "bun test && ./shim/gog.test.sh"
   },
   "dependencies": {
     "hono": "^4.6.0"
