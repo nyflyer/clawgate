@@ -53,7 +53,6 @@ teardown() {
 assert_equals() {
   expected="$1"
   actual="$2"
-  msg="$3"
 
   if [ "$expected" = "$actual" ]; then
     return 0
@@ -104,7 +103,9 @@ run_test() {
 test_newline_in_json_becomes_actual_newline() {
   # JSON \n escape should become actual newline in output
   # This tests that jq properly decodes JSON and printf '%s' preserves it
-  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\nworld","stderr":"","exitCode":0}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\nworld","stderr":"","exitCode":0}}'
+  export MOCK_RESPONSE
 
   output=$("$SHIM" test 2>&1)
 
@@ -120,7 +121,9 @@ test_newline_in_json_becomes_actual_newline() {
 test_literal_backslash_n_preserved() {
   # JSON \\n (escaped backslash + n) should become literal \n in output
   # If using echo instead of printf, this would be wrongly expanded
-  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\\nworld","stderr":"","exitCode":0}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\\nworld","stderr":"","exitCode":0}}'
+  export MOCK_RESPONSE
 
   output=$("$SHIM" test 2>&1)
 
@@ -133,7 +136,9 @@ test_literal_backslash_n_preserved() {
 }
 
 test_tab_characters_preserved() {
-  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"col1\tcol2\tcol3","stderr":"","exitCode":0}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"col1\tcol2\tcol3","stderr":"","exitCode":0}}'
+  export MOCK_RESPONSE
 
   output=$("$SHIM" test 2>&1)
 
@@ -143,7 +148,9 @@ test_tab_characters_preserved() {
 }
 
 test_exit_code_propagates() {
-  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"","stderr":"error output","exitCode":42}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"","stderr":"error output","exitCode":42}}'
+  export MOCK_RESPONSE
 
   set +e
   "$SHIM" test >/dev/null 2>&1
@@ -154,7 +161,9 @@ test_exit_code_propagates() {
 }
 
 test_error_response_handled() {
-  export MOCK_RESPONSE='{"ok":false,"error":{"code":"OPERATION_DENIED","message":"command not allowed"}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":false,"error":{"code":"OPERATION_DENIED","message":"command not allowed"}}'
+  export MOCK_RESPONSE
 
   set +e
   output=$("$SHIM" test 2>&1)
@@ -166,7 +175,9 @@ test_error_response_handled() {
 }
 
 test_stderr_goes_to_stderr() {
-  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"stdout msg","stderr":"stderr msg","exitCode":0}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"stdout msg","stderr":"stderr msg","exitCode":0}}'
+  export MOCK_RESPONSE
 
   stdout_output=$("$SHIM" test 2>/dev/null)
   stderr_output=$("$SHIM" test 2>&1 >/dev/null)
@@ -176,7 +187,9 @@ test_stderr_goes_to_stderr() {
 }
 
 test_empty_response_handled() {
-  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"","stderr":"","exitCode":0}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"","stderr":"","exitCode":0}}'
+  export MOCK_RESPONSE
 
   set +e
   "$SHIM" test >/dev/null 2>&1
@@ -188,7 +201,9 @@ test_empty_response_handled() {
 
 test_json_special_chars_in_output() {
   # Response with JSON containing special characters
-  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"{\"key\":\"value\"}","stderr":"","exitCode":0}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"{\"key\":\"value\"}","stderr":"","exitCode":0}}'
+  export MOCK_RESPONSE
 
   output=$("$SHIM" test 2>&1)
 
@@ -198,7 +213,9 @@ test_json_special_chars_in_output() {
 
 test_multiline_output() {
   # Multiple newlines in output
-  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"line1\nline2\nline3","stderr":"","exitCode":0}}'
+  # shellcheck disable=SC2089
+  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"line1\nline2\nline3","stderr":"","exitCode":0}}'
+  export MOCK_RESPONSE
 
   output=$("$SHIM" test 2>&1)
 
