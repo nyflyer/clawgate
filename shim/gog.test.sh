@@ -242,7 +242,7 @@ main() {
 
   # Check jq is available (required for shim to work properly)
   if ! command -v jq >/dev/null 2>&1; then
-    printf "${RED}ERROR: jq is required but not installed${NC}\n"
+    printf "%sERROR: jq is required but not installed%s\n" "$RED" "$NC"
     exit 1
   fi
 
@@ -258,10 +258,10 @@ main() {
 
   printf "\n"
   if [ "$TESTS_PASSED" -eq "$TESTS_RUN" ]; then
-    printf "${GREEN}All %d tests passed!${NC}\n" "$TESTS_RUN"
+    printf "%sAll %d tests passed!%s\n" "$GREEN" "$TESTS_RUN" "$NC"
     exit 0
   else
-    printf "${RED}%d/%d tests passed${NC}\n" "$TESTS_PASSED" "$TESTS_RUN"
+    printf "%s%d/%d tests passed%s\n" "$RED" "$TESTS_PASSED" "$TESTS_RUN" "$NC"
     exit 1
   fi
 }
