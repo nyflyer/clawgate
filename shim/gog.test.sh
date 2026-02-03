@@ -109,12 +109,12 @@ run_test() {
 # TEST CASES
 # ============================================================================
 
+# shellcheck disable=SC2317
 test_newline_in_json_becomes_actual_newline() {
   # JSON \n escape should become actual newline in output
   # This tests that jq properly decodes JSON and printf '%s' preserves it
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\nworld","stderr":"","exitCode":0}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\nworld","stderr":"","exitCode":0}}'
 
   output=$("$SHIM" test 2>&1)
 
@@ -127,12 +127,12 @@ test_newline_in_json_becomes_actual_newline() {
   [ "$line_count" -ge 1 ]
 }
 
+# shellcheck disable=SC2317
 test_literal_backslash_n_preserved() {
   # JSON \\n (escaped backslash + n) should become literal \n in output
   # If using echo instead of printf, this would be wrongly expanded
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\\nworld","stderr":"","exitCode":0}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\\nworld","stderr":"","exitCode":0}}'
 
   output=$("$SHIM" test 2>&1)
 
@@ -144,10 +144,10 @@ test_literal_backslash_n_preserved() {
   assert_contains "$output" 'hello\nworld'
 }
 
+# shellcheck disable=SC2317
 test_tab_characters_preserved() {
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"col1\tcol2\tcol3","stderr":"","exitCode":0}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"col1\tcol2\tcol3","stderr":"","exitCode":0}}'
 
   output=$("$SHIM" test 2>&1)
 
@@ -156,10 +156,10 @@ test_tab_characters_preserved() {
   assert_contains "$output" "col2" || return 1
 }
 
+# shellcheck disable=SC2317
 test_exit_code_propagates() {
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"","stderr":"error output","exitCode":42}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"","stderr":"error output","exitCode":42}}'
 
   set +e
   "$SHIM" test >/dev/null 2>&1
@@ -169,10 +169,10 @@ test_exit_code_propagates() {
   assert_equals "42" "$exit_code"
 }
 
+# shellcheck disable=SC2317
 test_error_response_handled() {
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":false,"error":{"code":"OPERATION_DENIED","message":"command not allowed"}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":false,"error":{"code":"OPERATION_DENIED","message":"command not allowed"}}'
 
   set +e
   output=$("$SHIM" test 2>&1)
@@ -183,10 +183,10 @@ test_error_response_handled() {
   assert_contains "$output" "command not allowed"
 }
 
+# shellcheck disable=SC2317
 test_stderr_goes_to_stderr() {
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"stdout msg","stderr":"stderr msg","exitCode":0}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"stdout msg","stderr":"stderr msg","exitCode":0}}'
 
   stdout_output=$("$SHIM" test 2>/dev/null)
   stderr_output=$("$SHIM" test 2>&1 >/dev/null)
@@ -195,10 +195,10 @@ test_stderr_goes_to_stderr() {
   assert_contains "$stderr_output" "stderr msg" || return 1
 }
 
+# shellcheck disable=SC2317
 test_empty_response_handled() {
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"","stderr":"","exitCode":0}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"","stderr":"","exitCode":0}}'
 
   set +e
   "$SHIM" test >/dev/null 2>&1
@@ -208,11 +208,11 @@ test_empty_response_handled() {
   assert_equals "0" "$exit_code"
 }
 
+# shellcheck disable=SC2317
 test_json_special_chars_in_output() {
   # Response with JSON containing special characters
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"{\"key\":\"value\"}","stderr":"","exitCode":0}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"{\"key\":\"value\"}","stderr":"","exitCode":0}}'
 
   output=$("$SHIM" test 2>&1)
 
@@ -220,11 +220,11 @@ test_json_special_chars_in_output() {
   assert_contains "$output" '"value"' || return 1
 }
 
+# shellcheck disable=SC2317
 test_multiline_output() {
   # Multiple newlines in output
-  # shellcheck disable=SC2089
-  MOCK_RESPONSE='{"ok":true,"data":{"stdout":"line1\nline2\nline3","stderr":"","exitCode":0}}'
-  export MOCK_RESPONSE
+  # shellcheck disable=SC2089,SC2090
+  export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"line1\nline2\nline3","stderr":"","exitCode":0}}'
 
   output=$("$SHIM" test 2>&1)
 
