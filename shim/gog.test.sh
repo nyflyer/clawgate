@@ -50,19 +50,25 @@ teardown() {
 }
 
 # Test assertion helper
+# shellcheck disable=SC2317
 assert_equals() {
   expected="$1"
   actual="$2"
+  msg="$3"
 
   if [ "$expected" = "$actual" ]; then
     return 0
   else
+    if [ -n "$msg" ]; then
+      printf "  Assertion failed: %s\n" "$msg"
+    fi
     printf "  Expected: %s\n" "$expected"
     printf "  Actual:   %s\n" "$actual"
     return 1
   fi
 }
 
+# shellcheck disable=SC2317
 assert_contains() {
   haystack="$1"
   needle="$2"
