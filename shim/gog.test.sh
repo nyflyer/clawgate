@@ -6,6 +6,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SHIM="$SCRIPT_DIR/gog"
 MOCK_DIR=""
+ORIGINAL_PATH="$PATH"
 TESTS_RUN=0
 TESTS_PASSED=0
 
@@ -39,7 +40,7 @@ MOCK_CURL
   chmod +x "$MOCK_DIR/curl"
 
   # Prepend mock dir to PATH
-  export PATH="$MOCK_DIR:$PATH"
+  export PATH="$MOCK_DIR:$ORIGINAL_PATH"
   export CLAWGATE_URL="http://mock:9876"
 }
 
@@ -47,6 +48,8 @@ teardown() {
   if [ -n "$MOCK_DIR" ] && [ -d "$MOCK_DIR" ]; then
     rm -rf "$MOCK_DIR"
   fi
+  export PATH="$ORIGINAL_PATH"
+  unset MOCK_RESPONSE MOCK_RESPONSE_FILE MOCK_EXIT_CODE
 }
 
 # Test assertion helper
@@ -56,16 +59,12 @@ assert_equals() {
   actual="$2"
   msg="$3"
 
-  if [ "$expected" = "$actual" ]; then
-    return 0
-  else
-    if [ -n "$msg" ]; then
-      printf "  Assertion failed: %s\n" "$msg"
-    fi
-    printf "  Expected: %s\n" "$expected"
-    printf "  Actual:   %s\n" "$actual"
-    return 1
-  fi
+  [ "$expected" = "$actual" ] && return 0
+
+  [ -n "$msg" ] && printf "  Assertion failed: %s\n" "$msg"
+  printf "  Expected: %s\n" "$expected"
+  printf "  Actual:   %s\n" "$actual"
+  return 1
 }
 
 # shellcheck disable=SC2317
@@ -81,6 +80,39 @@ assert_contains() {
       return 1
       ;;
   esac
+}
+
+# shellcheck disable=SC2317
+assert_line_count() {
+  actual="$1"
+  op="$2"
+  expected="$3"
+  msg="$4"
+
+  case "$op" in
+    -ge) [ "$actual" -ge "$expected" ] && return 0 ;;
+    -eq) [ "$actual" -eq "$expected" ] && return 0 ;;
+    -ne) [ "$actual" -ne "$expected" ] && return 0 ;;
+    *) printf "  Unknown operator: %s\n" "$op"; return 1 ;;
+  esac
+
+  [ -n "$msg" ] && printf "  Assertion failed: %s\n" "$msg"
+  printf "  Expected: %s %s\n" "$op" "$expected"
+  printf "  Actual:   %s\n" "$actual"
+  return 1
+}
+
+# shellcheck disable=SC2317
+assert_exit_code_nonzero() {
+  exit_code="$1"
+  msg="${2:-exit code should be non-zero}"
+
+  [ "$exit_code" -ne 0 ] && return 0
+
+  printf "  Assertion failed: %s\n" "$msg"
+  printf "  Expected: non-zero\n"
+  printf "  Actual:   %s\n" "$exit_code"
+  return 1
 }
 
 # Run a test function
@@ -112,25 +144,22 @@ run_test() {
 # shellcheck disable=SC2317
 test_newline_in_json_becomes_actual_newline() {
   # JSON \n escape should become actual newline in output
-  # This tests that jq properly decodes JSON and printf '%s' preserves it
   # shellcheck disable=SC2089,SC2090
   export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\nworld","stderr":"","exitCode":0}}'
 
   output=$("$SHIM" test 2>&1)
 
-  # Output should contain both words
   assert_contains "$output" "hello" || return 1
   assert_contains "$output" "world" || return 1
 
   # Verify actual newline exists (not literal \n)
   line_count=$(printf '%s' "$output" | wc -l)
-  [ "$line_count" -ge 1 ]
+  assert_line_count "$line_count" -ge 1 "output should contain newline"
 }
 
 # shellcheck disable=SC2317
 test_literal_backslash_n_preserved() {
   # JSON \\n (escaped backslash + n) should become literal \n in output
-  # If using echo instead of printf, this would be wrongly expanded
   # shellcheck disable=SC2089,SC2090
   export MOCK_RESPONSE='{"ok":true,"data":{"stdout":"hello\\nworld","stderr":"","exitCode":0}}'
 
@@ -138,7 +167,7 @@ test_literal_backslash_n_preserved() {
 
   # Output should be on a single line (no actual newline)
   line_count=$(printf '%s' "$output" | wc -l)
-  [ "$line_count" -eq 0 ]
+  assert_line_count "$line_count" -eq 0 "output should have no newlines" || return 1
 
   # Should contain literal backslash-n
   assert_contains "$output" 'hello\nworld'
@@ -151,9 +180,9 @@ test_tab_characters_preserved() {
 
   output=$("$SHIM" test 2>&1)
 
-  # Output should contain tab character
-  assert_contains "$output" "col1" || return 1
-  assert_contains "$output" "col2" || return 1
+  # Assert actual tab characters exist between columns (not spaces)
+  assert_contains "$output" "$(printf 'col1\tcol2')" || return 1
+  assert_contains "$output" "$(printf 'col2\tcol3')" || return 1
 }
 
 # shellcheck disable=SC2317
@@ -179,7 +208,7 @@ test_error_response_handled() {
   exit_code=$?
   set -e
 
-  [ "$exit_code" -ne 0 ] || return 1
+  assert_exit_code_nonzero "$exit_code" || return 1
   assert_contains "$output" "command not allowed"
 }
 
