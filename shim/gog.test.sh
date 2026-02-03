@@ -92,12 +92,15 @@ run_test() {
 
   setup
 
-  if "$test_name" 2>/dev/null; then
-    printf "${GREEN}PASS${NC}\n"
+  output_log=$(mktemp)
+  if "$test_name" >"$output_log" 2>&1; then
+    printf "%sPASS%s\n" "$GREEN" "$NC"
     TESTS_PASSED=$((TESTS_PASSED + 1))
   else
-    printf "${RED}FAIL${NC}\n"
+    printf "%sFAIL%s\n" "$RED" "$NC"
+    sed 's/^/    /' "$output_log"
   fi
+  rm "$output_log"
 
   teardown
 }
