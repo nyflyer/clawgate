@@ -46,31 +46,31 @@ fi
 
 # Parse response with jq if available
 if command -v jq >/dev/null 2>&1; then
-  ok=$(echo "$response" | jq -r '.ok')
+  ok=$(printf '%s' "$response" | jq -r '.ok')
 
   if [ "$ok" = "true" ]; then
-    stdout=$(echo "$response" | jq -r '.data.stdout // empty')
-    stderr=$(echo "$response" | jq -r '.data.stderr // empty')
-    exit_code=$(echo "$response" | jq -r '.data.exitCode // 0')
+    stdout=$(printf '%s' "$response" | jq -r '.data.stdout // empty')
+    stderr=$(printf '%s' "$response" | jq -r '.data.stderr // empty')
+    exit_code=$(printf '%s' "$response" | jq -r '.data.exitCode // 0')
 
     [ -n "$stdout" ] && printf '%s' "$stdout"
     [ -n "$stderr" ] && printf '%s' "$stderr" >&2
 
     exit "$exit_code"
   else
-    error_msg=$(echo "$response" | jq -r '.error.message // "unknown error"')
-    echo "clawgate error: $error_msg" >&2
+    error_msg=$(printf '%s' "$response" | jq -r '.error.message // "unknown error"')
+    printf 'clawgate error: %s\n' "$error_msg" >&2
     exit 1
   fi
 else
   # Fallback: warn that jq is needed
-  if echo "$response" | grep -q '"ok":true'; then
-    echo "Warning: jq not installed - raw response follows:" >&2
-    echo "$response"
+  if printf '%s' "$response" | grep -q '"ok":true'; then
+    printf 'Warning: jq not installed - raw response follows:\n' >&2
+    printf '%s\n' "$response"
     exit 0
   else
-    echo "clawgate error: request failed (install jq for better output)" >&2
-    echo "$response" >&2
+    printf 'clawgate error: request failed (install jq for better output)\n' >&2
+    printf '%s\n' "$response" >&2
     exit 1
   fi
 fi

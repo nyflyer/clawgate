@@ -1,6 +1,6 @@
 {
   "name": "clawgate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Credential proxy for AI agent sandboxes",
   "type": "module",
   "main": "src/index.ts",
@@ -10,7 +10,9 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:shim": "./shim/gog.test.sh",
+    "test:all": "bun test && ./shim/gog.test.sh"
   },
   "dependencies": {
     "hono": "^4.6.0"

@@ -30,7 +30,7 @@ describe('Clawgate MVP', () => {
 
     expect(res.status).toBe(200)
     expect(data.ok).toBe(true)
-    expect(data.version).toBe('0.1.0')
+    expect(data.version).toBe('0.1.1')
   })
 
   test('POST /v1/exec with allowed command succeeds', async () => {
@@ -210,4 +210,92 @@ describe('Timeout', () => {
     expect(data.error.code).toBe('EXEC_ERROR')
     expect(data.error.message).toContain('timed out')
   }, 35000) // 35s timeout for test itself
+})
+
+describe('Escape Sequences', () => {
+  let escapeServer: { stop: () => void; port: number }
+  let escapeBaseUrl: string
+
+  beforeAll(async () => {
+    delete process.env.CLAWGATE_AUTH_TOKEN
+    process.env.CLAWGATE_CREDENTIALS = '{}'
+    process.env.CLAWGATE_ALLOWLIST = 'echo,printf,cat'
+
+    const mod = await import(`./index.ts?escape=${Date.now()}`)
+    escapeServer = Bun.serve({ port: 0, fetch: mod.default.fetch })
+    escapeBaseUrl = `http://localhost:${escapeServer.port}`
+  })
+
+  afterAll(() => {
+    escapeServer?.stop()
+  })
+
+  test('multiline output is preserved', async () => {
+    const res = await fetch(`${escapeBaseUrl}/v1/exec`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ command: 'printf', args: ['line1\\nline2\\nline3'] }),
+    })
+    const data = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(data.ok).toBe(true)
+    expect(data.data.stdout).toBe('line1\nline2\nline3')
+  })
+
+  test('tab characters are preserved', async () => {
+    const res = await fetch(`${escapeBaseUrl}/v1/exec`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ command: 'printf', args: ['col1\\tcol2\\tcol3'] }),
+    })
+    const data = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(data.ok).toBe(true)
+    expect(data.data.stdout).toBe('col1\tcol2\tcol3')
+  })
+
+  test('backslashes are preserved', async () => {
+    const res = await fetch(`${escapeBaseUrl}/v1/exec`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ command: 'printf', args: ['path\\\\to\\\\file'] }),
+    })
+    const data = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(data.ok).toBe(true)
+    expect(data.data.stdout).toBe('path\\to\\file')
+  })
+
+  test('quotes in output are preserved', async () => {
+    const res = await fetch(`${escapeBaseUrl}/v1/exec`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ command: 'echo', args: ['"hello"', "'world'"] }),
+    })
+    const data = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(data.ok).toBe(true)
+    expect(data.data.stdout).toContain('"hello"')
+    expect(data.data.stdout).toContain("'world'")
+  })
+
+  test('response JSON with special characters is valid', async () => {
+    const res = await fetch(`${escapeBaseUrl}/v1/exec`, {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ command: 'printf', args: ['{"key":"value\\nwith\\nnewlines"}'] }),
+    })
+
+    expect(res.status).toBe(200)
+    const text = await res.text()
+    expect(() => JSON.parse(text)).not.toThrow()
+
+    const data = JSON.parse(text)
+    expect(data.ok).toBe(true)
+    expect(data.data.stdout).toBe('{"key":"value\nwith\nnewlines"}')
+  })
 })

@@ -70,7 +70,7 @@ async function readLimited(stream: ReadableStream<Uint8Array>, maxBytes: number)
 app.use('*', logger())
 
 // Health check
-app.get('/healthz', (c) => c.json({ ok: true, version: '0.1.0' }))
+app.get('/healthz', (c) => c.json({ ok: true, version: '0.1.1' }))
 
 // Main exec endpoint
 app.post('/v1/exec', async (c) => {
@@ -176,7 +176,7 @@ app.post('/v1/exec', async (c) => {
 // Start server
 console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║  CLAWGATE v0.1.0                                          ║
+║  CLAWGATE v0.1.1                                          ║
 ║  Credential proxy for AI agent sandboxes                  ║
 ╚═══════════════════════════════════════════════════════════╝
 

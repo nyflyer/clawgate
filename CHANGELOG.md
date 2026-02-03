@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-02-01
+
+### Fixed
+
+- Shim now uses `printf '%s'` instead of `echo` to prevent escape sequence expansion (e.g., `\n` in output no longer becomes actual newlines)
+
+### Added
+
+- Shell-based unit tests for gog shim (`shim/gog.test.sh`) with curl mocking
+- Escape sequence tests in `src/index.test.ts` (multiline, tabs, backslashes, quotes, JSON special chars)
+- CI pipeline (`.github/workflows/ci.yml`) with bun tests, shim tests, and ShellCheck
+- New npm scripts: `test:shim`, `test:all`
+
 ## [0.1.0] - 2026-02-01
 
 ### Added
@@ -40,5 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No rate limiting (DoS protection planned for v1.1)
 - Output limited to 10MB per stream
 
-[Unreleased]: https://github.com/nyflyer/clawgate/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/nyflyer/clawgate/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/nyflyer/clawgate/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/nyflyer/clawgate/releases/tag/v0.1.0
