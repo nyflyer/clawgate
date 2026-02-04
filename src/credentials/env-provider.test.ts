@@ -1,31 +1,20 @@
-/**
- * Tests for EnvCredentialProvider
- *
- * Follows TDD pattern - tests written before implementation.
- */
-
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import { EnvCredentialProvider } from './env-provider'
 import type { CredentialProvider } from './types'
 
 describe('EnvCredentialProvider', () => {
-  // Save original env to restore after each test
   const originalEnv = { ...process.env }
 
   beforeEach(() => {
-    // Set test credentials
     process.env.TEST_CRED = 'test-value'
     process.env.ANOTHER_CRED = 'another-value'
     process.env.EMPTY_CRED = ''
   })
 
   afterEach(() => {
-    // Restore original env
-    // Delete all keys first
     for (const key of Object.keys(process.env)) {
       delete process.env[key]
     }
-    // Restore original values
     Object.assign(process.env, originalEnv)
   })
 
