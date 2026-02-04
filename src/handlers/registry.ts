@@ -18,12 +18,12 @@ export class HandlerRegistry {
   private handlerClasses = new Map<string, HandlerClass>()
 
   /**
-   * Register a handler instance with its class.
-   * @param handler - The handler instance to register
-   * @param handlerClass - The handler class (for credential lookup)
+   * Register a handler class.
+   * @param handlerClass - The handler class to register
    * @throws Error if handler ID is already registered
    */
-  register(handler: Handler, handlerClass: HandlerClass): void {
+  register(handlerClass: HandlerClass): void {
+    const handler = new handlerClass()
     const id = handler.id.toLowerCase()
     if (this.handlers.has(id)) {
       throw new Error(`Handler '${id}' already registered`)
