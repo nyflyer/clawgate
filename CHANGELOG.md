@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Handler abstraction layer for extensible multi-tool support (v0.2 Phase 1)
+  - `Handler` interface with `id`, `execute()`, `validate()`, `blockedArgs`
+  - `HandlerClass` type for static `requiredCredentials` property
+  - `ValidationResult` discriminated union for type-safe validation
+  - `ExecutionContext` and `ExecutionResult` types
+  - `HandlerRegistry` class with register/get/has/getRequiredCredentials/getIds
+  - Case-insensitive handler ID lookup
+  - Duplicate registration detection (fail-fast)
+- Handler registry test suite (21 tests)
+
 ## [0.1.1] - 2026-02-01
 
 ### Fixed
