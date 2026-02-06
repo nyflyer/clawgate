@@ -8,10 +8,8 @@
 
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
-import { HandlerRegistry } from './handlers'
+import { HandlerRegistry, createGenericHandlerClass } from './handlers'
 import { EnvCredentialProvider } from './credentials'
-import { createGenericHandlerClass } from './handlers/generic'
-import type { ExecutionContext } from './handlers'
 
 const app = new Hono()
 
@@ -104,13 +102,13 @@ app.post('/v1/exec', async (c) => {
     return c.json({ ok: false, error: { code: 'EXEC_ERROR', message: 'Server configuration error' } }, 500)
   }
 
-  const ctx: ExecutionContext = {
+  const ctx = {
     args: args as string[],
     credentials: credResult.credentials,
     timeout: TIMEOUT_MS,
   }
 
-  console.log(`[EXEC] ${command} (${(args as string[]).length} args)`)
+  console.log(`[EXEC] ${command} (${ctx.args.length} args)`)
 
   try {
     const { stdout, stderr, exitCode } = await handler.execute(ctx)
