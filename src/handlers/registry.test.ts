@@ -1,13 +1,15 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { HandlerRegistry } from './registry'
-import type { Handler, ExecutionContext, ExecutionResult, ValidationResult } from './types'
+import type { Handler, HandlerClass, ExecutionContext, ExecutionResult, ValidationResult } from './types'
 
-/** Creates a minimal test handler class with the given configuration. */
-function createTestHandler(config: {
+interface TestHandlerConfig {
   id: string
   credentials?: readonly string[]
   blockedArgs?: readonly string[]
-}): (new () => Handler) & { readonly requiredCredentials: readonly string[] } {
+}
+
+/** Creates a minimal test handler class for testing. */
+function createTestHandler(config: TestHandlerConfig): HandlerClass {
   const { id, credentials = [], blockedArgs = [] } = config
 
   return class implements Handler {
@@ -16,7 +18,7 @@ function createTestHandler(config: {
     readonly blockedArgs = blockedArgs
 
     validate(args: readonly string[]): ValidationResult {
-      const blocked = this.blockedArgs.find((b) => args.includes(b))
+      const blocked = this.blockedArgs.find(b => args.includes(b))
       if (blocked) {
         return { ok: false, error: `Argument '${blocked}' is not allowed` }
       }
@@ -24,11 +26,7 @@ function createTestHandler(config: {
     }
 
     async execute(ctx: ExecutionContext): Promise<ExecutionResult> {
-      return {
-        stdout: `executed with ${ctx.args.length} args`,
-        stderr: '',
-        exitCode: 0,
-      }
+      return { stdout: `executed with ${ctx.args.length} args`, stderr: '', exitCode: 0 }
     }
   }
 }

@@ -17,11 +17,7 @@ export class HandlerRegistry {
   /** Handler classes indexed by lowercase ID (for credential lookup) */
   private handlerClasses = new Map<string, HandlerClass>()
 
-  /**
-   * Register a handler class.
-   * @param handlerClass - The handler class to register
-   * @throws Error if handler ID is already registered
-   */
+  /** Register a handler class. Throws if ID is already registered. */
   register(handlerClass: HandlerClass): void {
     const handler = new handlerClass()
     const id = handler.id.toLowerCase()
@@ -32,38 +28,22 @@ export class HandlerRegistry {
     this.handlerClasses.set(id, handlerClass)
   }
 
-  /**
-   * Get a handler by ID.
-   * @param id - Handler ID (case-insensitive)
-   * @returns Handler instance or undefined if not found
-   */
+  /** Get a handler by ID (case-insensitive). */
   get(id: string): Handler | undefined {
     return this.handlers.get(id.toLowerCase())
   }
 
-  /**
-   * Check if a handler is registered.
-   * @param id - Handler ID (case-insensitive)
-   * @returns true if handler exists
-   */
+  /** Check if a handler is registered (case-insensitive). */
   has(id: string): boolean {
     return this.handlers.has(id.toLowerCase())
   }
 
-  /**
-   * Get required credentials for a handler.
-   * @param id - Handler ID (case-insensitive)
-   * @returns Array of credential names or undefined if handler not found
-   */
+  /** Get required credentials for a handler. */
   getRequiredCredentials(id: string): readonly string[] | undefined {
-    const handlerClass = this.handlerClasses.get(id.toLowerCase())
-    return handlerClass?.requiredCredentials
+    return this.handlerClasses.get(id.toLowerCase())?.requiredCredentials
   }
 
-  /**
-   * Get all registered handler IDs.
-   * @returns Array of handler IDs
-   */
+  /** Get all registered handler IDs. */
   getIds(): string[] {
     return Array.from(this.handlers.keys())
   }
