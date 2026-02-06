@@ -64,12 +64,16 @@ export class GenericHandler implements Handler {
       }, ctx.timeout)
     })
 
-    const exitCode = await Promise.race([proc.exited, timeoutPromise]).finally(() => {
+    const [exitCode, stdout, stderr] = await Promise.race([
+      Promise.all([
+        proc.exited,
+        readLimited(proc.stdout, MAX_OUTPUT_BYTES),
+        readLimited(proc.stderr, MAX_OUTPUT_BYTES),
+      ]),
+      timeoutPromise,
+    ]).finally(() => {
       if (timeoutId) clearTimeout(timeoutId)
     })
-
-    const stdout = await readLimited(proc.stdout, MAX_OUTPUT_BYTES)
-    const stderr = await readLimited(proc.stderr, MAX_OUTPUT_BYTES)
 
     return { stdout, stderr, exitCode }
   }

@@ -30,7 +30,7 @@ describe('Clawgate MVP', () => {
 
     expect(res.status).toBe(200)
     expect(data.ok).toBe(true)
-    expect(data.version).toBe('0.1.1')
+    expect(data.version).toBe('0.2.0')
   })
 
   test('POST /v1/exec with allowed command succeeds', async () => {

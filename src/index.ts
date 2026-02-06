@@ -54,7 +54,7 @@ const TIMEOUT_MS = 30000
 
 app.use('*', logger())
 
-app.get('/healthz', (c) => c.json({ ok: true, version: '0.1.1' }))
+app.get('/healthz', (c) => c.json({ ok: true, version: '0.2.0' }))
 
 app.post('/v1/exec', async (c) => {
   if (AUTH_TOKEN) {
