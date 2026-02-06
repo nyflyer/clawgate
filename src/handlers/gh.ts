@@ -10,13 +10,9 @@ export class GhHandler extends GenericHandler {
   }
 
   validate(args: readonly string[]): ValidationResult {
-    if (args.length > 0) {
-      const subcommand = args[0]
-      for (const blocked of this.blockedArgs) {
-        if (subcommand === blocked) {
-          return { ok: false, error: `Subcommand '${blocked}' is not allowed` }
-        }
-      }
+    const subcommand = args[0]
+    if (subcommand && (this.blockedArgs as readonly string[]).includes(subcommand)) {
+      return { ok: false, error: `Subcommand '${subcommand}' is not allowed` }
     }
     return { ok: true }
   }
