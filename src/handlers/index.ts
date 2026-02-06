@@ -13,3 +13,5 @@ export type {
 } from './types'
 
 export { HandlerRegistry } from './registry'
+
+export { GenericHandler, createGenericHandlerClass } from './generic'
