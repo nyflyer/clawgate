@@ -10,6 +10,8 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { HandlerRegistry, createGenericHandlerClass } from './handlers'
 import { GogHandler } from './handlers/gog'
+import { GhHandler } from './handlers/gh'
+import { CurlHandler } from './handlers/curl'
 import type { HandlerClass } from './handlers'
 import { EnvCredentialProvider } from './credentials'
 
@@ -49,6 +51,8 @@ const credentialProvider = new EnvCredentialProvider()
 
 const KNOWN_HANDLERS: Record<string, HandlerClass> = {
   gog: GogHandler as unknown as HandlerClass,
+  gh: GhHandler as unknown as HandlerClass,
+  curl: CurlHandler as unknown as HandlerClass,
 }
 
 const toolList = (process.env.CLAWGATE_ALLOWLIST || 'gog').split(',').map(s => s.trim()).filter(Boolean)
