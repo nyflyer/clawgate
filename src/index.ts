@@ -9,6 +9,8 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { HandlerRegistry, createGenericHandlerClass } from './handlers'
+import { GogHandler } from './handlers/gog'
+import type { HandlerClass } from './handlers'
 import { EnvCredentialProvider } from './credentials'
 
 const app = new Hono()
@@ -45,9 +47,14 @@ try {
 const registry = new HandlerRegistry()
 const credentialProvider = new EnvCredentialProvider()
 
+const KNOWN_HANDLERS: Record<string, HandlerClass> = {
+  gog: GogHandler as unknown as HandlerClass,
+}
+
 const toolList = (process.env.CLAWGATE_ALLOWLIST || 'gog').split(',').map(s => s.trim()).filter(Boolean)
 for (const tool of toolList) {
-  registry.register(createGenericHandlerClass(tool, credentialKeys))
+  const HandlerCls = KNOWN_HANDLERS[tool] ?? createGenericHandlerClass(tool, credentialKeys)
+  registry.register(HandlerCls)
 }
 
 const TIMEOUT_MS = 30000
