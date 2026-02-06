@@ -1,18 +1,3 @@
-/**
- * CurlHandler - Concrete handler for the curl CLI tool
- *
- * Extends GenericHandler with:
- * - CURL_AUTH_TOKEN credential requirement
- * - Comprehensive blocked flags: file write, upload, data exfiltration, config/credential
- *   file access, TLS manipulation, verbose modes (leak injected auth), shared library
- *   loading, and arbitrary write-out
- * - Rejects file:// URLs (case-insensitive) to prevent local file access
- * - Overrides execute() to inject Authorization Bearer header when CURL_AUTH_TOKEN is present
- *
- * This is the only handler that overrides execute() -- curl does not read auth from
- * environment variables, so the token must be injected as a -H flag.
- */
-
 import { GenericHandler } from './generic'
 import type { ExecutionContext, ExecutionResult, ValidationResult } from './types'
 

@@ -1,11 +1,3 @@
-/**
- * GogHandler - Concrete handler for the gog CLI tool
- *
- * Extends GenericHandler with:
- * - GOG_KEYRING_PASSWORD credential requirement
- * - Blocks --keyring-password argument to prevent credential override
- */
-
 import { GenericHandler } from './generic'
 import type { ValidationResult } from './types'
 
