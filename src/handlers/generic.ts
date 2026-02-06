@@ -55,7 +55,7 @@ export class GenericHandler implements Handler {
       stderr: 'pipe',
     })
 
-    let timeoutId: Timer | undefined
+    let timeoutId: Timer
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
