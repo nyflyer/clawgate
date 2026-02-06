@@ -71,9 +71,7 @@ export class GenericHandler implements Handler {
         readLimited(proc.stderr, MAX_OUTPUT_BYTES),
       ]),
       timeoutPromise,
-    ]).finally(() => {
-      if (timeoutId) clearTimeout(timeoutId)
-    })
+    ]).finally(() => clearTimeout(timeoutId))
 
     return { stdout, stderr, exitCode }
   }
