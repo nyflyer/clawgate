@@ -45,7 +45,7 @@ try {
 const registry = new HandlerRegistry()
 const credentialProvider = new EnvCredentialProvider()
 
-const toolList = (process.env.CLAWGATE_ALLOWLIST || 'gog').split(',').map(s => s.trim())
+const toolList = (process.env.CLAWGATE_ALLOWLIST || 'gog').split(',').map(s => s.trim()).filter(Boolean)
 for (const tool of toolList) {
   registry.register(createGenericHandlerClass(tool, credentialKeys))
 }
