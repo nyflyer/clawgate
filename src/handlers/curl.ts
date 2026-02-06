@@ -34,12 +34,10 @@ export class CurlHandler extends GenericHandler {
 
   validate(args: readonly string[]): ValidationResult {
     for (const arg of args) {
-      // Check for file:// protocol URLs (case-insensitive)
       if (arg.toLowerCase().startsWith('file://')) {
         return { ok: false, error: 'file:// URLs are not allowed' }
       }
 
-      // Check against blocked flags (exact match or prefix with =)
       for (const blocked of this.blockedArgs) {
         if (arg === blocked || arg.startsWith(blocked + '=')) {
           return { ok: false, error: `Argument '${blocked}' is not allowed` }
@@ -51,11 +49,9 @@ export class CurlHandler extends GenericHandler {
 
   async execute(ctx: ExecutionContext): Promise<ExecutionResult> {
     const token = ctx.credentials['CURL_AUTH_TOKEN']
+    if (!token) return super.execute(ctx)
 
-    const augmentedArgs = token
-      ? ['-H', `Authorization: Bearer ${token}`, ...ctx.args]
-      : [...ctx.args]
-
-    return super.execute({ ...ctx, args: augmentedArgs })
+    const args = ['-H', `Authorization: Bearer ${token}`, ...ctx.args]
+    return super.execute({ ...ctx, args })
   }
 }
